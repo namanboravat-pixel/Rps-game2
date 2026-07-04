@@ -141,9 +141,31 @@
     90%{ opacity:0.5; }
     100%{ transform:translateY(-160px) scale(0.4); opacity:0; }
   }
+  .cam-preview{
+    position:fixed;
+    width:96px; height:128px;
+    border-radius:14px;
+    overflow:hidden;
+    border:2px solid rgba(255,255,255,0.25);
+    box-shadow:0 8px 24px rgba(0,0,0,0.45);
+    z-index:999;
+    touch-action:none;
+    cursor:grab;
+    background:#000;
+  }
+  .cam-preview:active{ cursor:grabbing; }
+  .cam-preview::after{
+    content:'⠿';
+    position:absolute; top:2px; right:5px;
+    color:rgba(255,255,255,0.6);
+    font-size:12px;
+    pointer-events:none;
+  }
   video{
-    position:absolute; width:1px; height:1px;
-    opacity:0; pointer-events:none;
+    width:100%; height:100%;
+    object-fit:cover;
+    transform:scaleX(-1);
+    display:block;
   }
   canvas.ring{
     position:absolute; top:0; left:0;
@@ -262,16 +284,16 @@
     transition:transform 0.32s cubic-bezier(.4,0,.2,1);
   }
   .fist{
-    position:absolute; bottom:-17px; left:50%; transform:translateX(-50%) scale(1);
-    width:33px; height:33px;
+    position:absolute; bottom:-26px; left:50%; transform:translateX(-50%) scale(1);
+    width:54px; height:54px;
     background:#f4dfc0;
     border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-size:18px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.28);
+    font-size:34px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.3);
     transition:transform 0.28s cubic-bezier(.34,1.56,.64,1);
   }
-  .fist.pop{ transform:translateX(-50%) scale(1.3); }
+  .fist.pop{ transform:translateX(-50%) scale(1.35); }
   .status-line{
     font-size:12px; color:var(--ink-dim); letter-spacing:0.2px;
     display:flex; align-items:center; gap:6px;
@@ -356,24 +378,32 @@
 </style>
 </head>
 <body>
+<div class="cam-preview" id="camPreview">
+  <video id="video" autoplay playsinline muted></video>
+</div>
+
 <div class="app">
   <header>
     <h1>RPS <span>Arena</span></h1>
     <div class="subtitle">Chip is watching your hand — not you</div>
   </header>
+
   <div class="scoreboard">
     <div class="score-box you"><div class="score-num" id="scoreYou">0</div><div class="score-label">You</div></div>
     <div class="score-box tie"><div class="score-num" id="scoreTie">0</div><div class="score-label">Tie</div></div>
     <div class="score-box cpu"><div class="score-num" id="scoreCpu">0</div><div class="score-label">Chip</div></div>
   </div>
+
   <div class="stage">
     <div class="arena" id="arena">
+
       <div class="scanlines"></div>
       <div class="ring-deco r1"></div>
       <div class="ring-deco r2"></div>
       <div id="particleLayer"></div>
-      <video id="video" autoplay playsinline muted></video>
+
       <canvas class="ring" id="ringCanvas"></canvas>
+
       <div class="stagearea">
         <div class="character" id="character">
           <div class="body-wrap">
@@ -395,7 +425,9 @@
         </div>
         <div class="status-line"><div class="live-dot" id="liveDot"></div><span id="liveText">not watching yet</span></div>
       </div>
+
       <div class="countdown-num" id="countdownNum" style="display:none;"><span id="countdownInner"></span></div>
+
       <div class="result-overlay" id="resultOverlay">
         <div class="result-row">
           <span id="resYouIcon">✊</span>
@@ -405,22 +437,27 @@
         <div class="result-verdict" id="resultVerdict"></div>
         <div class="result-sub" id="resultSub"></div>
       </div>
+
       <div class="permission-msg" id="permMsg">
-        <p>This needs your camera to read hand shapes. Your video is never shown or saved — only the shape is detected.</p>
+        <p>This needs your camera to read hand shapes. Your feed is only visible to you in the small preview box — it's never uploaded or saved anywhere.</p>
       </div>
     </div>
   </div>
+
   <footer>
     <button class="btn btn-primary" id="mainBtn">Start</button>
     <button class="btn btn-secondary" id="resetBtn" style="display:none;">Reset score</button>
     <div class="hint" id="hintText">Rock = fist &nbsp;·&nbsp; Paper = flat hand &nbsp;·&nbsp; Scissors = ✌️</div>
-    <div class="privacy-note">Your camera feed stays on your device and is never displayed or recorded.</div>
+    <div class="privacy-note">The small camera box is only visible to you — drag it anywhere. Nothing is recorded or uploaded.</div>
   </footer>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
 <script>
 const video = document.getElementById('video');
+const camPreview = document.getElementById('camPreview');
 const ringCanvas = document.getElementById('ringCanvas');
 const ringCtx = ringCanvas.getContext('2d');
 const liveDot = document.getElementById('liveDot');
@@ -508,9 +545,10 @@ function classifyGesture(landmarks){
   const thumbMcpDist = dist(wrist, landmarks[2]);
   const thumbExtended = thumbTipDist > thumbMcpDist * 1.1;
 
+  if (index && middle && !ring && !pinky) return 'scissors';
+
   if (numExtended <= 1 && !thumbExtended) return 'rock';
   if (numExtended >= 3 || (numExtended === 2 && thumbExtended)) return 'paper';
-  if (index && middle && !ring && !pinky) return 'scissors';
   return numExtended >= 2 ? 'scissors' : 'rock';
 }
 
@@ -619,6 +657,48 @@ function launchConfetti(){
   }
 }
 
+function placeCamPreviewDefault(){
+  const margin = 14;
+  camPreview.style.left = (window.innerWidth - 96 - margin) + 'px';
+  camPreview.style.top = margin + 'px';
+}
+placeCamPreviewDefault();
+window.addEventListener('resize', placeCamPreviewDefault);
+
+(function enableDrag(el){
+  let dragging = false;
+  let offsetX = 0, offsetY = 0;
+
+  function onPointerDown(e){
+    dragging = true;
+    const point = e.touches ? e.touches[0] : e;
+    const rect = el.getBoundingClientRect();
+    offsetX = point.clientX - rect.left;
+    offsetY = point.clientY - rect.top;
+    el.style.transition = 'none';
+  }
+  function onPointerMove(e){
+    if (!dragging) return;
+    const point = e.touches ? e.touches[0] : e;
+    let x = point.clientX - offsetX;
+    let y = point.clientY - offsetY;
+    x = Math.max(4, Math.min(window.innerWidth - el.offsetWidth - 4, x));
+    y = Math.max(4, Math.min(window.innerHeight - el.offsetHeight - 4, y));
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    e.preventDefault();
+  }
+  function onPointerUp(){ dragging = false; }
+
+  el.addEventListener('mousedown', onPointerDown);
+  window.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('mouseup', onPointerUp);
+
+  el.addEventListener('touchstart', onPointerDown, {passive:true});
+  window.addEventListener('touchmove', onPointerMove, {passive:false});
+  window.addEventListener('touchend', onPointerUp);
+})(camPreview);
+
 async function startCamera(){
   try{
     permMsg.style.display = 'none';
@@ -658,7 +738,9 @@ function drawRing(progress){
 
 function sleep(ms){ return new Promise(res=>setTimeout(res,ms)); }
 
-async function pumpOnce(){
+const PUMP_SEQUENCE = ['✊','✋','✌️'];
+async function pumpOnce(beatIndex){
+  fist.textContent = PUMP_SEQUENCE[beatIndex % PUMP_SEQUENCE.length];
   arm.style.transition = 'transform 0.16s cubic-bezier(.4,0,.2,1)';
   arm.style.transform = 'rotate(-30deg)';
   await sleep(160);
@@ -701,7 +783,7 @@ async function playRound(){
     countdownInner.style.animation = '';
     drawRing((i+1)/4);
     soundTick();
-    await pumpOnce();
+    await pumpOnce(i);
   }
 
   countdownInner.textContent = 'GO';
