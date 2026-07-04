@@ -5,21 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>RPS Arena</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#12141a;
-    --panel:#1b1e27;
-    --ink:#f3f4f7;
-    --ink-dim:#9a9fae;
+    --bg:#0b0d13;
+    --panel:#161925;
+    --panel2:#1d2130;
+    --ink:#f4f5f8;
+    --ink-dim:#8d93a6;
     --accent:#6ea8fe;
     --accent2:#f2b84c;
-    --win:#5fd39a;
-    --lose:#f26d6d;
-    --tie:#9a9fae;
-    --bot1:#7c5cff;
-    --bot2:#4b34b8;
-    --bot-ink:#2a2440;
+    --win:#5fe3a0;
+    --lose:#ff5c7a;
+    --tie:#9aa1b8;
+    --bot1:#8b6bff;
+    --bot2:#5334d9;
+    --bot-ink:#241f42;
+    --neon1:rgba(139,107,255,0.55);
+    --neon2:rgba(94,227,220,0.35);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
@@ -36,324 +39,320 @@
     max-width:480px; margin:0 auto;
     position:relative;
   }
-  header{
-    padding:20px 20px 6px;
-    text-align:center;
-    flex-shrink:0;
-  }
+  header{ padding:20px 20px 4px; text-align:center; flex-shrink:0; }
   h1{
     font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:22px;
-    margin:0;
-    letter-spacing:-0.2px;
-    color:var(--ink);
+    font-weight:800; font-size:23px; margin:0;
+    letter-spacing:-0.3px; color:var(--ink);
   }
-  h1 span{color:var(--accent2);}
-  .subtitle{
-    font-size:12.5px;
-    color:var(--ink-dim);
-    margin-top:4px;
-    letter-spacing:0.1px;
+  h1 span{
+    background:linear-gradient(120deg,var(--accent2),#ffd98a);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
   }
-
+  .subtitle{ font-size:12.5px; color:var(--ink-dim); margin-top:4px; }
   .scoreboard{
-    display:flex;
-    justify-content:center;
-    gap:20px;
-    padding:14px 0 4px;
-    flex-shrink:0;
+    display:flex; justify-content:center; gap:14px;
+    padding:14px 16px 6px; flex-shrink:0;
   }
-  .score-box{ text-align:center; }
+  .score-box{
+    text-align:center; flex:1; max-width:110px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:14px; padding:9px 4px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+  }
   .score-num{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:24px;
-    font-weight:700;
+    font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:800;
+    display:inline-block; transition:transform 0.25s cubic-bezier(.34,1.56,.64,1);
   }
+  .score-num.pop{ transform:scale(1.35); }
   .score-label{
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:1.2px;
-    color:var(--ink-dim);
-    margin-top:2px;
+    font-size:9.5px; text-transform:uppercase; letter-spacing:1.3px;
+    color:var(--ink-dim); margin-top:2px;
   }
   .score-box.you .score-num{color:var(--accent);}
   .score-box.cpu .score-num{color:var(--accent2);}
   .score-box.tie .score-num{color:var(--tie);}
-
   .stage{
-    flex:1;
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height:0;
-    padding:10px 20px;
+    flex:1; position:relative; display:flex;
+    align-items:center; justify-content:center;
+    min-height:0; padding:10px 20px;
   }
-
   .arena{
     position:relative;
-    width:100%;
-    max-width:340px;
-    max-height:48vh;
+    width:100%; max-width:340px; max-height:48vh;
     aspect-ratio:1/1;
-    border-radius:24px;
+    border-radius:26px;
     overflow:hidden;
-    background:radial-gradient(circle at 50% 30%, #262b38, #14161c 75%);
-    border:1px solid rgba(255,255,255,0.06);
-    box-shadow:0 12px 30px rgba(0,0,0,0.35);
+    background:radial-gradient(circle at 50% 28%, #232a3d 0%, #10121a 70%);
+    border:1px solid rgba(255,255,255,0.07);
+    box-shadow:0 14px 34px rgba(0,0,0,0.4), inset 0 0 60px rgba(139,107,255,0.06);
     margin:0 auto;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform 0.05s linear;
   }
-
-  /* camera video is kept off-screen visually but still runs for hand tracking */
-  video{
-    position:absolute;
-    width:1px; height:1px;
-    opacity:0;
+  .arena.shake{ animation:arenaShake 0.4s ease; }
+  @keyframes arenaShake{
+    0%,100%{ transform:translate(0,0); }
+    20%{ transform:translate(-4px,2px) rotate(-0.5deg); }
+    40%{ transform:translate(4px,-2px) rotate(0.5deg); }
+    60%{ transform:translate(-3px,-1px); }
+    80%{ transform:translate(3px,1px); }
+  }
+  .ring-deco{
+    position:absolute; border-radius:50%;
+    border:1.5px solid transparent;
     pointer-events:none;
+  }
+  .ring-deco.r1{
+    width:78%; height:78%;
+    border-image:conic-gradient(from 0deg, var(--neon1), transparent 40%, var(--neon1)) 1;
+    animation:spinSlow 14s linear infinite;
+    opacity:0.55;
+  }
+  .ring-deco.r2{
+    width:92%; height:92%;
+    border-image:conic-gradient(from 180deg, var(--neon2), transparent 35%, var(--neon2)) 1;
+    animation:spinSlow 22s linear infinite reverse;
+    opacity:0.4;
+  }
+  @keyframes spinSlow{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+  .scanlines{
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      to bottom, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px,
+      transparent 2px, transparent 4px
+    );
+    background-size:100% 100%;
+    animation:scanMove 6s linear infinite;
+    pointer-events:none;
+    mix-blend-mode:overlay;
+  }
+  @keyframes scanMove{ from{ background-position:0 0; } to{ background-position:0 40px; } }
+  .particle{
+    position:absolute; border-radius:50%;
+    background:radial-gradient(circle, rgba(139,107,255,0.9), rgba(139,107,255,0));
+    pointer-events:none;
+    animation:floatUp linear infinite;
+  }
+  @keyframes floatUp{
+    0%{ transform:translateY(0) scale(1); opacity:0; }
+    10%{ opacity:0.7; }
+    90%{ opacity:0.5; }
+    100%{ transform:translateY(-160px) scale(0.4); opacity:0; }
+  }
+  video{
+    position:absolute; width:1px; height:1px;
+    opacity:0; pointer-events:none;
   }
   canvas.ring{
     position:absolute; top:0; left:0;
     width:100%; height:100%;
-    pointer-events:none;
-    z-index:5;
+    pointer-events:none; z-index:6;
   }
-
-  /* ===== Character ===== */
   .stagearea{
-    position:relative; z-index:2;
-    display:flex; flex-direction:column; align-items:center;
-    gap:10px;
+    position:relative; z-index:3;
+    display:flex; flex-direction:column; align-items:center; gap:9px;
   }
   .character{
-    position:relative;
-    width:120px; height:150px;
+    position:relative; width:126px; height:156px;
+    animation:idleFloat 3.4s ease-in-out infinite;
   }
-  .character.win{ animation:celebrate 0.55s ease-in-out 2; }
-  .character.lose{ animation:shakeNo 0.5s ease-in-out 2; }
-  .character.tie{ animation:shrug 0.5s ease-in-out 2; }
-  @keyframes celebrate{
-    0%,100%{ transform:translateY(0) rotate(0deg); }
-    25%{ transform:translateY(-10px) rotate(-6deg); }
-    75%{ transform:translateY(-10px) rotate(6deg); }
-  }
-  @keyframes shakeNo{
-    0%,100%{ transform:translateX(0) rotate(0deg); }
-    25%{ transform:translateX(-7px) rotate(-4deg); }
-    75%{ transform:translateX(7px) rotate(4deg); }
-  }
-  @keyframes shrug{
+  @keyframes idleFloat{
     0%,100%{ transform:translateY(0); }
     50%{ transform:translateY(-6px); }
   }
-
+  .character.win{ animation:celebrate 0.55s ease-in-out 2; }
+  .character.lose{ animation:shakeNo 0.5s ease-in-out 2; }
+  .character.tie{ animation:shrugAnim 0.55s ease-in-out 2; }
+  .character.wave{ animation:idleFloat 3.4s ease-in-out infinite; }
+  @keyframes celebrate{
+    0%,100%{ transform:translateY(-6px) rotate(0deg); }
+    25%{ transform:translateY(-16px) rotate(-7deg); }
+    75%{ transform:translateY(-16px) rotate(7deg); }
+  }
+  @keyframes shakeNo{
+    0%,100%{ transform:translateX(0) rotate(0deg); }
+    25%{ transform:translateX(-8px) rotate(-4deg); }
+    75%{ transform:translateX(8px) rotate(4deg); }
+  }
+  @keyframes shrugAnim{
+    0%,100%{ transform:translateY(-4px) rotate(0deg); }
+    50%{ transform:translateY(-14px) rotate(2deg); }
+  }
+  .body-wrap{
+    position:absolute; inset:0;
+    animation:breathe 2.6s ease-in-out infinite;
+    transform-origin:50% 100%;
+  }
+  @keyframes breathe{
+    0%,100%{ transform:scale(1,1); }
+    50%{ transform:scale(1.025,0.985); }
+  }
   .head{
     position:absolute; top:0; left:50%; transform:translateX(-50%);
-    width:76px; height:66px;
+    width:78px; height:68px;
     background:linear-gradient(155deg,var(--bot1),var(--bot2));
     border-radius:50% 50% 46% 46% / 58% 58% 42% 42%;
-    box-shadow:0 8px 18px rgba(0,0,0,0.35);
-    animation:idleBob 2.8s ease-in-out infinite;
-  }
-  @keyframes idleBob{
-    0%,100%{ transform:translateX(-50%) translateY(0); }
-    50%{ transform:translateX(-50%) translateY(-5px); }
+    box-shadow:0 8px 20px rgba(0,0,0,0.4), inset 0 -6px 10px rgba(0,0,0,0.15);
   }
   .antenna{
-    position:absolute; top:-14px; left:50%; transform:translateX(-50%);
-    width:4px; height:16px; background:var(--bot2); border-radius:2px;
+    position:absolute; top:-15px; left:50%; transform:translateX(-50%);
+    width:4px; height:17px; background:var(--bot2); border-radius:2px;
   }
   .antenna::after{
-    content:''; position:absolute; top:-7px; left:50%; transform:translateX(-50%);
-    width:9px; height:9px; border-radius:50%; background:var(--accent2);
-    box-shadow:0 0 8px rgba(242,184,76,0.7);
+    content:''; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+    width:10px; height:10px; border-radius:50%; background:var(--accent2);
+    animation:antennaPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes antennaPulse{
+    0%,100%{ box-shadow:0 0 6px 1px rgba(242,184,76,0.6); transform:translateX(-50%) scale(1); }
+    50%{ box-shadow:0 0 14px 4px rgba(242,184,76,0.95); transform:translateX(-50%) scale(1.15); }
   }
   .eyes{
-    position:absolute; top:26px; left:0; right:0;
-    display:flex; justify-content:center; gap:17px;
+    position:absolute; top:27px; left:0; right:0;
+    display:flex; justify-content:center; gap:18px;
+    --lookx:0px; --looky:0px;
   }
   .eye{
-    width:12px; height:14px; background:#fff; border-radius:50%;
-    position:relative;
-    transition:transform 0.12s ease;
+    width:13px; height:15px; background:#fff; border-radius:50%;
+    position:relative; overflow:hidden;
+    transition:transform 0.12s ease, height 0.12s ease;
   }
   .eye::after{
-    content:''; position:absolute; width:6px; height:6px; background:var(--bot-ink);
-    border-radius:50%; top:4px; left:3px;
+    content:'';
+    position:absolute; width:6.5px; height:6.5px; background:var(--bot-ink);
+    border-radius:50%; top:calc(4.2px + var(--looky)); left:calc(3.2px + var(--lookx));
+    transition:top 0.18s ease, left 0.18s ease;
   }
-  .eye.blink{ transform:scaleY(0.12); }
+  .eye.blink{ transform:scaleY(0.1); }
   .mouth{
     position:absolute; left:50%; transform:translateX(-50%);
-    transition:all 0.2s ease;
+    transition:all 0.28s cubic-bezier(.4,0,.2,1);
   }
   .mouth.neutral{ width:16px; height:3px; border-radius:2px; background:var(--bot-ink); bottom:16px; }
-  .mouth.happy{ width:22px; height:11px; border:3px solid var(--bot-ink); border-top:none; border-radius:0 0 20px 20px; bottom:12px; background:transparent; }
-  .mouth.sad{ width:20px; height:10px; border:3px solid var(--bot-ink); border-bottom:none; border-radius:20px 20px 0 0; bottom:20px; background:transparent; }
+  .mouth.happy{ width:23px; height:12px; border:3px solid var(--bot-ink); border-top:none; border-radius:0 0 20px 20px; bottom:11px; background:transparent; }
+  .mouth.sad{ width:20px; height:10px; border:3px solid var(--bot-ink); border-bottom:none; border-radius:20px 20px 0 0; bottom:21px; background:transparent; }
   .mouth.surprised{ width:11px; height:11px; border-radius:50%; background:var(--bot-ink); bottom:14px; }
   .mouth.focus{ width:12px; height:4px; border-radius:2px; background:var(--bot-ink); bottom:16px; }
-
   .torso{
     position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
-    width:58px; height:40px;
+    width:60px; height:42px;
     background:linear-gradient(155deg,var(--bot1),var(--bot2));
-    border-radius:22px 22px 26px 26px;
-    box-shadow:0 6px 14px rgba(0,0,0,0.28);
+    border-radius:22px 22px 27px 27px;
+    box-shadow:0 6px 16px rgba(0,0,0,0.32), inset 0 -5px 8px rgba(0,0,0,0.15);
   }
-
+  .chest-light{
+    position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
+    width:9px; height:9px; border-radius:50%;
+    background:var(--accent);
+    animation:chestPulse 2.2s ease-in-out infinite;
+  }
+  @keyframes chestPulse{
+    0%,100%{ box-shadow:0 0 6px 1px rgba(110,168,254,0.55); opacity:0.7; }
+    50%{ box-shadow:0 0 12px 3px rgba(110,168,254,0.9); opacity:1; }
+  }
   .arm{
-    position:absolute; bottom:38px; right:16px;
-    width:13px; height:34px;
+    position:absolute; bottom:38px; right:14px;
+    width:14px; height:36px;
     background:linear-gradient(155deg,var(--bot1),var(--bot2));
     border-radius:8px;
     transform-origin:top center;
     transform:rotate(-8deg);
-    transition:transform 0.15s ease;
-  }
-  .arm.pumping{ animation:armPump 0.45s ease-in-out infinite; }
-  @keyframes armPump{
-    0%,100%{ transform:rotate(-22deg); }
-    50%{ transform:rotate(20deg); }
-  }
-  .arm.reveal{ animation:armReveal 0.4s ease-out forwards; }
-  @keyframes armReveal{
-    0%{ transform:rotate(20deg) scale(1); }
-    55%{ transform:rotate(-8deg) scale(1.18); }
-    100%{ transform:rotate(-4deg) scale(1); }
+    transition:transform 0.32s cubic-bezier(.4,0,.2,1);
   }
   .fist{
-    position:absolute; bottom:-16px; left:50%; transform:translateX(-50%);
-    width:32px; height:32px;
+    position:absolute; bottom:-17px; left:50%; transform:translateX(-50%) scale(1);
+    width:33px; height:33px;
     background:#f4dfc0;
     border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-size:17px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.25);
+    font-size:18px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.28);
+    transition:transform 0.28s cubic-bezier(.34,1.56,.64,1);
   }
-
+  .fist.pop{ transform:translateX(-50%) scale(1.3); }
   .status-line{
-    font-size:12px;
-    color:var(--ink-dim);
-    letter-spacing:0.2px;
+    font-size:12px; color:var(--ink-dim); letter-spacing:0.2px;
     display:flex; align-items:center; gap:6px;
   }
-  .live-dot{
-    width:6px; height:6px; border-radius:50%;
-    background:var(--lose);
-    flex-shrink:0;
-  }
-  .live-dot.detecting{background:var(--win);}
-
-  .guess-chip{
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.1);
-    padding:5px 13px;
-    border-radius:20px;
-    font-size:13px;
-    font-weight:600;
-    color:var(--accent2);
-    display:none;
-    align-items:center;
-    gap:6px;
-  }
-
+  .live-dot{ width:6px; height:6px; border-radius:50%; background:var(--lose); flex-shrink:0; transition:background 0.2s; }
+  .live-dot.detecting{ background:var(--win); box-shadow:0 0 6px 1px rgba(95,227,160,0.6); }
   .countdown-num{
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
     font-family:'Space Grotesk',sans-serif;
-    font-size:80px;
-    font-weight:700;
-    color:var(--ink);
-    z-index:10;
-    background:rgba(18,20,26,0.5);
+    font-size:82px; font-weight:800; color:var(--ink);
+    z-index:10; background:rgba(11,13,19,0.55);
     pointer-events:none;
   }
-
+  .countdown-num span{
+    display:inline-block;
+    animation:countPop 0.5s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes countPop{
+    0%{ transform:scale(0.3); opacity:0; }
+    60%{ transform:scale(1.2); opacity:1; }
+    100%{ transform:scale(1); opacity:1; }
+  }
   .result-overlay{
     position:absolute; inset:0;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:8px;
-    background:rgba(18,20,26,0.92);
-    z-index:15;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity 0.25s ease;
-    padding:20px;
-    text-align:center;
+    gap:8px; background:rgba(11,13,19,0.93);
+    z-index:15; opacity:0; pointer-events:none;
+    transition:opacity 0.3s ease; padding:20px; text-align:center;
   }
-  .result-overlay.show{opacity:1; pointer-events:auto;}
-  .result-row{
-    display:flex; align-items:center; gap:20px;
-    font-size:40px;
-  }
-  .result-vs{font-family:'Space Grotesk',sans-serif; font-size:13px; color:var(--ink-dim); font-weight:600;}
+  .result-overlay.show{ opacity:1; pointer-events:auto; }
+  .result-row{ display:flex; align-items:center; gap:20px; font-size:40px; }
+  .result-vs{ font-family:'Space Grotesk',sans-serif; font-size:13px; color:var(--ink-dim); font-weight:700; }
   .result-verdict{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:24px;
-    font-weight:700;
-    margin-top:8px;
+    font-family:'Space Grotesk',sans-serif; font-size:25px; font-weight:800; margin-top:8px;
   }
-  .result-verdict.win{color:var(--win);}
-  .result-verdict.lose{color:var(--lose);}
-  .result-verdict.tie{color:var(--tie);}
-  .result-sub{font-size:12px; color:var(--ink-dim); margin-top:2px;}
-
+  .result-verdict.win{ color:var(--win); }
+  .result-verdict.lose{ color:var(--lose); }
+  .result-verdict.tie{ color:var(--tie); }
+  .result-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
   footer{
-    flex-shrink:0;
-    padding:16px 20px 24px;
+    flex-shrink:0; padding:16px 20px 26px;
     display:flex; flex-direction:column; align-items:center; gap:10px;
   }
   .btn{
-    border:none;
-    font-family:'Inter',sans-serif;
-    font-weight:700;
-    font-size:15px;
-    padding:15px 30px;
-    border-radius:14px;
-    cursor:pointer;
-    width:100%;
-    max-width:320px;
-    transition:transform 0.1s ease, opacity 0.15s ease;
+    border:none; font-family:'Inter',sans-serif; font-weight:700; font-size:15px;
+    padding:16px 30px; border-radius:16px; cursor:pointer;
+    width:100%; max-width:320px; position:relative; overflow:hidden;
+    transition:transform 0.12s ease, box-shadow 0.2s ease;
     letter-spacing:0.1px;
   }
-  .btn:active{ transform:scale(0.97); }
+  .btn:active{ transform:scale(0.96); }
   .btn:disabled{ opacity:0.5; }
   .btn-primary{
-    background:var(--accent2);
+    background:linear-gradient(135deg,var(--accent2),#ffcf70);
     color:#1b1f1d;
+    box-shadow:0 6px 18px rgba(242,184,76,0.35);
   }
   .btn-secondary{
-    background:transparent;
-    color:var(--ink-dim);
+    background:transparent; color:var(--ink-dim);
     border:1.5px solid rgba(255,255,255,0.12);
-    font-weight:600;
-    font-size:13px;
-    padding:10px 20px;
+    font-weight:600; font-size:13px; padding:10px 20px;
   }
-  .hint{
-    font-size:12px;
-    color:var(--ink-dim);
-    text-align:center;
-    max-width:300px;
-  }
-  .privacy-note{
-    font-size:11px;
-    color:var(--ink-dim);
-    text-align:center;
-    max-width:300px;
-    opacity:0.8;
-  }
-
+  .hint{ font-size:12px; color:var(--ink-dim); text-align:center; max-width:300px; }
+  .privacy-note{ font-size:11px; color:var(--ink-dim); text-align:center; max-width:300px; opacity:0.75; }
   .permission-msg{
     position:absolute; inset:0;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:10px; padding:24px; text-align:center;
-    z-index:20;
-    background:rgba(18,20,26,0.6);
+    gap:10px; padding:24px; text-align:center; z-index:20;
+    background:rgba(11,13,19,0.65);
   }
   .permission-msg p{ font-size:13px; color:var(--ink-dim); max-width:260px; }
+  .confetti-piece{
+    position:absolute; top:-10px; width:7px; height:12px;
+    opacity:0.95; pointer-events:none;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(300px) rotate(540deg); opacity:0; }
+  }
 </style>
 </head>
 <body>
@@ -362,39 +361,41 @@
     <h1>RPS <span>Arena</span></h1>
     <div class="subtitle">Chip is watching your hand — not you</div>
   </header>
-
   <div class="scoreboard">
     <div class="score-box you"><div class="score-num" id="scoreYou">0</div><div class="score-label">You</div></div>
     <div class="score-box tie"><div class="score-num" id="scoreTie">0</div><div class="score-label">Tie</div></div>
     <div class="score-box cpu"><div class="score-num" id="scoreCpu">0</div><div class="score-label">Chip</div></div>
   </div>
-
   <div class="stage">
     <div class="arena" id="arena">
+      <div class="scanlines"></div>
+      <div class="ring-deco r1"></div>
+      <div class="ring-deco r2"></div>
+      <div id="particleLayer"></div>
       <video id="video" autoplay playsinline muted></video>
       <canvas class="ring" id="ringCanvas"></canvas>
-
       <div class="stagearea">
         <div class="character" id="character">
-          <div class="head">
-            <div class="antenna"></div>
-            <div class="eyes">
-              <div class="eye" id="eyeL"></div>
-              <div class="eye" id="eyeR"></div>
+          <div class="body-wrap">
+            <div class="head">
+              <div class="antenna"></div>
+              <div class="eyes" id="eyes">
+                <div class="eye" id="eyeL"></div>
+                <div class="eye" id="eyeR"></div>
+              </div>
+              <div class="mouth neutral" id="mouth"></div>
             </div>
-            <div class="mouth neutral" id="mouth"></div>
-          </div>
-          <div class="torso"></div>
-          <div class="arm" id="arm">
-            <div class="fist" id="fist">✊</div>
+            <div class="torso">
+              <div class="chest-light"></div>
+            </div>
+            <div class="arm" id="arm">
+              <div class="fist" id="fist">✊</div>
+            </div>
           </div>
         </div>
         <div class="status-line"><div class="live-dot" id="liveDot"></div><span id="liveText">not watching yet</span></div>
-        <div class="guess-chip" id="guessChip"></div>
       </div>
-
-      <div class="countdown-num" id="countdownNum" style="display:none;"></div>
-
+      <div class="countdown-num" id="countdownNum" style="display:none;"><span id="countdownInner"></span></div>
       <div class="result-overlay" id="resultOverlay">
         <div class="result-row">
           <span id="resYouIcon">✊</span>
@@ -404,13 +405,11 @@
         <div class="result-verdict" id="resultVerdict"></div>
         <div class="result-sub" id="resultSub"></div>
       </div>
-
       <div class="permission-msg" id="permMsg">
         <p>This needs your camera to read hand shapes. Your video is never shown or saved — only the shape is detected.</p>
       </div>
     </div>
   </div>
-
   <footer>
     <button class="btn btn-primary" id="mainBtn">Start</button>
     <button class="btn btn-secondary" id="resetBtn" style="display:none;">Reset score</button>
@@ -418,24 +417,23 @@
     <div class="privacy-note">Your camera feed stays on your device and is never displayed or recorded.</div>
   </footer>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-
 <script>
 const video = document.getElementById('video');
 const ringCanvas = document.getElementById('ringCanvas');
 const ringCtx = ringCanvas.getContext('2d');
 const liveDot = document.getElementById('liveDot');
 const liveText = document.getElementById('liveText');
-const guessChip = document.getElementById('guessChip');
 const character = document.getElementById('character');
 const mouth = document.getElementById('mouth');
+const eyes = document.getElementById('eyes');
 const eyeL = document.getElementById('eyeL');
 const eyeR = document.getElementById('eyeR');
 const arm = document.getElementById('arm');
 const fist = document.getElementById('fist');
 const countdownNum = document.getElementById('countdownNum');
+const countdownInner = document.getElementById('countdownInner');
 const resultOverlay = document.getElementById('resultOverlay');
 const resYouIcon = document.getElementById('resYouIcon');
 const resCpuIcon = document.getElementById('resCpuIcon');
@@ -444,18 +442,52 @@ const resultSub = document.getElementById('resultSub');
 const mainBtn = document.getElementById('mainBtn');
 const resetBtn = document.getElementById('resetBtn');
 const permMsg = document.getElementById('permMsg');
-const hintText = document.getElementById('hintText');
+const arena = document.getElementById('arena');
+const particleLayer = document.getElementById('particleLayer');
 const scoreYouEl = document.getElementById('scoreYou');
 const scoreCpuEl = document.getElementById('scoreCpu');
 const scoreTieEl = document.getElementById('scoreTie');
 
 let scoreYou = 0, scoreCpu = 0, scoreTie = 0;
-let currentGesture = null;
 let cameraStarted = false;
 let roundInProgress = false;
 let camera = null;
 
+const GESTURE_HISTORY_SIZE = 8;
+const GESTURE_LOCK_THRESHOLD = 5;
+let gestureHistory = [];
+let stableGesture = null;
+let rawGesture = null;
+
 const ICONS = { rock:'✊', paper:'✋', scissors:'✌️' };
+
+let audioCtx = null;
+function getAudioCtx(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function beep(freq, duration, type='sine', vol=0.15, delay=0){
+  try{
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = vol;
+    osc.connect(gain); gain.connect(ctx.destination);
+    const start = ctx.currentTime + delay;
+    gain.gain.setValueAtTime(vol, start);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+    osc.start(start);
+    osc.stop(start + duration + 0.02);
+  }catch(e){}
+}
+function soundClick(){ beep(520, 0.06, 'square', 0.08); }
+function soundTick(){ beep(700, 0.08, 'sine', 0.12); }
+function soundGo(){ beep(920, 0.15, 'triangle', 0.16); }
+function soundWin(){ beep(523,0.12,'triangle',0.15,0); beep(659,0.12,'triangle',0.15,0.1); beep(784,0.2,'triangle',0.18,0.2); }
+function soundLose(){ beep(300,0.18,'sawtooth',0.12,0); beep(220,0.25,'sawtooth',0.14,0.15); }
+function soundTie(){ beep(440,0.12,'sine',0.12,0); beep(440,0.12,'sine',0.12,0.14); }
 
 function dist(a,b){
   return Math.hypot(a.x-b.x, a.y-b.y, (a.z||0)-(b.z||0));
@@ -472,28 +504,54 @@ function classifyGesture(landmarks){
   const [index, middle, ring, pinky] = extended;
   const numExtended = extended.filter(Boolean).length;
 
-  if (numExtended <= 1) return 'rock';
-  if (numExtended >= 3) return 'paper';
+  const thumbTipDist = dist(wrist, landmarks[4]);
+  const thumbMcpDist = dist(wrist, landmarks[2]);
+  const thumbExtended = thumbTipDist > thumbMcpDist * 1.1;
+
+  if (numExtended <= 1 && !thumbExtended) return 'rock';
+  if (numExtended >= 3 || (numExtended === 2 && thumbExtended)) return 'paper';
   if (index && middle && !ring && !pinky) return 'scissors';
   return numExtended >= 2 ? 'scissors' : 'rock';
+}
+
+function updateStableGesture(gesture){
+  gestureHistory.push(gesture);
+  if (gestureHistory.length > GESTURE_HISTORY_SIZE) gestureHistory.shift();
+
+  const counts = {};
+  gestureHistory.forEach(g=>{ counts[g] = (counts[g]||0) + 1; });
+  let winner = stableGesture, winnerCount = 0;
+  Object.entries(counts).forEach(([g,c])=>{
+    if (c > winnerCount){ winner = g; winnerCount = c; }
+  });
+  if (winnerCount >= GESTURE_LOCK_THRESHOLD || stableGesture === null){
+    stableGesture = winner;
+  }
 }
 
 function onResults(results){
   ringCtx.clearRect(0,0,ringCanvas.width, ringCanvas.height);
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0){
     const landmarks = results.multiHandLandmarks[0];
-    currentGesture = classifyGesture(landmarks);
+    rawGesture = classifyGesture(landmarks);
+    updateStableGesture(rawGesture);
+
     liveDot.classList.add('detecting');
     liveText.textContent = 'reading your hand';
-    guessChip.style.display = 'flex';
-    guessChip.textContent = ICONS[currentGesture] + ' ' + currentGesture;
     if (!roundInProgress) mouth.className = 'mouth focus';
+
+    const palm = landmarks[9];
+    const lookX = (0.5 - palm.x) * 10;
+    const lookY = (palm.y - 0.5) * 8;
+    eyes.style.setProperty('--lookx', lookX.toFixed(1) + 'px');
+    eyes.style.setProperty('--looky', lookY.toFixed(1) + 'px');
   } else {
-    currentGesture = null;
+    rawGesture = null;
     liveDot.classList.remove('detecting');
     liveText.textContent = cameraStarted ? 'looking for a hand' : 'not watching yet';
-    guessChip.style.display = 'none';
     if (!roundInProgress) mouth.className = 'mouth neutral';
+    eyes.style.setProperty('--lookx', '0px');
+    eyes.style.setProperty('--looky', '0px');
   }
 }
 
@@ -501,16 +559,65 @@ const hands = new Hands({locateFile:(file)=>`https://cdn.jsdelivr.net/npm/@media
 hands.setOptions({
   maxNumHands:1,
   modelComplexity:0,
-  minDetectionConfidence:0.6,
-  minTrackingConfidence:0.5
+  minDetectionConfidence:0.65,
+  minTrackingConfidence:0.6
 });
 hands.onResults(onResults);
 
-// idle blinking
-setInterval(()=>{
-  eyeL.classList.add('blink'); eyeR.classList.add('blink');
-  setTimeout(()=>{ eyeL.classList.remove('blink'); eyeR.classList.remove('blink'); }, 140);
-}, 2600 + Math.random()*1400);
+function scheduleBlink(){
+  const delay = 2400 + Math.random()*1800;
+  setTimeout(()=>{
+    eyeL.classList.add('blink'); eyeR.classList.add('blink');
+    setTimeout(()=>{ eyeL.classList.remove('blink'); eyeR.classList.remove('blink'); }, 130);
+    scheduleBlink();
+  }, delay);
+}
+scheduleBlink();
+
+function scheduleIdleWave(){
+  const delay = 9000 + Math.random()*7000;
+  setTimeout(()=>{
+    if (!roundInProgress){
+      arm.style.transition = 'transform 0.25s ease-in-out';
+      arm.style.transform = 'rotate(-40deg)';
+      setTimeout(()=>{ arm.style.transform = 'rotate(-8deg)'; }, 260);
+      setTimeout(()=>{ arm.style.transform = 'rotate(-40deg)'; }, 520);
+      setTimeout(()=>{ arm.style.transform = 'rotate(-8deg)'; }, 780);
+    }
+    scheduleIdleWave();
+  }, delay);
+}
+scheduleIdleWave();
+
+function spawnParticles(){
+  for (let i=0;i<10;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 3 + Math.random()*4;
+    p.style.width = size+'px';
+    p.style.height = size+'px';
+    p.style.left = (Math.random()*100)+'%';
+    p.style.bottom = '-10px';
+    p.style.animationDuration = (5 + Math.random()*5)+'s';
+    p.style.animationDelay = (Math.random()*5)+'s';
+    particleLayer.appendChild(p);
+  }
+}
+spawnParticles();
+
+const confettiColors = ['#f2b84c','#6ea8fe','#5fe3a0','#ff5c7a','#ffd98a'];
+function launchConfetti(){
+  for (let i=0;i<26;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.left = (10 + Math.random()*80) + '%';
+    c.style.background = confettiColors[Math.floor(Math.random()*confettiColors.length)];
+    c.style.animationDuration = (0.9 + Math.random()*0.6) + 's';
+    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    arena.appendChild(c);
+    setTimeout(()=>c.remove(), 1700);
+  }
+}
 
 async function startCamera(){
   try{
@@ -551,43 +658,74 @@ function drawRing(progress){
 
 function sleep(ms){ return new Promise(res=>setTimeout(res,ms)); }
 
+async function pumpOnce(){
+  arm.style.transition = 'transform 0.16s cubic-bezier(.4,0,.2,1)';
+  arm.style.transform = 'rotate(-30deg)';
+  await sleep(160);
+  arm.style.transform = 'rotate(22deg)';
+  await sleep(160);
+  arm.style.transform = 'rotate(-8deg)';
+  await sleep(140);
+}
+
+async function revealArm(cpuChoice){
+  fist.textContent = ICONS[cpuChoice];
+  arm.style.transition = 'transform 0.32s cubic-bezier(.34,1.56,.64,1)';
+  arm.style.transform = 'rotate(18deg)';
+  fist.classList.add('pop');
+  await sleep(320);
+  fist.classList.remove('pop');
+}
+
+function bumpScore(el){
+  el.classList.remove('pop');
+  void el.offsetWidth;
+  el.classList.add('pop');
+}
+
 async function playRound(){
   if (!cameraStarted || roundInProgress) return;
   roundInProgress = true;
   resultOverlay.classList.remove('show');
   character.classList.remove('win','lose','tie');
   mainBtn.disabled = true;
-
   fist.textContent = '✊';
-  arm.classList.remove('reveal');
-  arm.classList.add('pumping');
   mouth.className = 'mouth focus';
 
-  countdownNum.style.display = 'flex';
-  const steps = ['3','2','1','GO'];
+  const steps = ['3','2','1'];
   for (let i=0;i<steps.length;i++){
-    countdownNum.textContent = steps[i];
-    drawRing((i+1)/steps.length);
-    await sleep(550);
+    countdownNum.style.display = 'flex';
+    countdownInner.textContent = steps[i];
+    countdownInner.style.animation = 'none';
+    void countdownInner.offsetWidth;
+    countdownInner.style.animation = '';
+    drawRing((i+1)/4);
+    soundTick();
+    await pumpOnce();
   }
 
-  const youChoice = currentGesture || 'rock';
+  countdownInner.textContent = 'GO';
+  countdownInner.style.animation = 'none';
+  void countdownInner.offsetWidth;
+  countdownInner.style.animation = '';
+  drawRing(1);
+  soundGo();
+
+  const youChoice = stableGesture || rawGesture || 'rock';
   const cpuChoice = ['rock','paper','scissors'][Math.floor(Math.random()*3)];
+
+  await revealArm(cpuChoice);
+  await sleep(150);
 
   countdownNum.style.display = 'none';
   ringCtx.clearRect(0,0,ringCanvas.width,ringCanvas.height);
-
-  arm.classList.remove('pumping');
-  fist.textContent = ICONS[cpuChoice];
-  arm.classList.add('reveal');
-
-  await sleep(150);
 
   let verdict, verdictClass;
   if (youChoice === cpuChoice){
     verdict = "It's a tie"; verdictClass = 'tie'; scoreTie++;
     mouth.className = 'mouth surprised';
     character.classList.add('tie');
+    soundTie();
   } else if (
     (youChoice==='rock' && cpuChoice==='scissors') ||
     (youChoice==='paper' && cpuChoice==='rock') ||
@@ -596,15 +734,21 @@ async function playRound(){
     verdict = 'You win'; verdictClass='win'; scoreYou++;
     mouth.className = 'mouth sad';
     character.classList.add('lose');
+    arena.classList.add('shake');
+    soundLose();
   } else {
     verdict = 'Chip wins'; verdictClass='lose'; scoreCpu++;
     mouth.className = 'mouth happy';
     character.classList.add('win');
+    arena.classList.add('shake');
+    launchConfetti();
+    soundWin();
   }
+  setTimeout(()=>arena.classList.remove('shake'), 400);
 
-  scoreYouEl.textContent = scoreYou;
-  scoreCpuEl.textContent = scoreCpu;
-  scoreTieEl.textContent = scoreTie;
+  scoreYouEl.textContent = scoreYou; bumpScore(scoreYouEl);
+  scoreCpuEl.textContent = scoreCpu; bumpScore(scoreCpuEl);
+  scoreTieEl.textContent = scoreTie; bumpScore(scoreTieEl);
 
   resYouIcon.textContent = ICONS[youChoice];
   resCpuIcon.textContent = ICONS[cpuChoice];
@@ -613,9 +757,9 @@ async function playRound(){
   resultSub.textContent = `You: ${youChoice}  ·  Chip: ${cpuChoice}`;
   resultOverlay.classList.add('show');
 
-  await sleep(1400);
+  await sleep(1500);
   mouth.className = 'mouth neutral';
-  arm.classList.remove('reveal');
+  arm.style.transition = 'transform 0.3s ease';
   arm.style.transform = 'rotate(-8deg)';
   fist.textContent = '✊';
 
@@ -624,6 +768,7 @@ async function playRound(){
 }
 
 mainBtn.addEventListener('click', ()=>{
+  soundClick();
   if (!cameraStarted){
     startCamera();
   } else {
@@ -632,6 +777,7 @@ mainBtn.addEventListener('click', ()=>{
 });
 
 resetBtn.addEventListener('click', ()=>{
+  soundClick();
   scoreYou = 0; scoreCpu = 0; scoreTie = 0;
   scoreYouEl.textContent = 0; scoreCpuEl.textContent = 0; scoreTieEl.textContent = 0;
   resultOverlay.classList.remove('show');
